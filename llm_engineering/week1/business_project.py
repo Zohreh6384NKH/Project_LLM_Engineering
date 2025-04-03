@@ -82,6 +82,8 @@ def get_links(url):
         "api_type":"ollama",
         "client_host":"http://localhost:11434",
     }] 
+    
+    
 
     llm_config = {
         "config_list":config_list,
@@ -99,17 +101,21 @@ def get_links(url):
                 )
     assistant_response = response["message"]["content"]
     return assistant_response
+
+
+
     
 
-# relevant_link = get_links("https://edwarddonner.com/")
+#relevant_link = get_links("https://edwarddonner.com/")
 relevant_link = get_links("https://anthropic.com")
 
 print(f"relevant_link:{relevant_link}")
 
 
 
-#with requests.post
 
+
+#with requests.post
 ollama_api = "http://localhost:11434/api/chat"
 headers = {'Content-Type': 'application/json'}
 model = "llama3.2"
@@ -128,4 +134,43 @@ pay_load = {
 response = requests.post(ollama_api, json=pay_load, headers=headers)
 response = response.json()['message']['content']
 print(f"response:{response}")
-                       
+
+
+import json
+
+def get_all_details(url):
+    result = "landing page:\n"
+    result += Website(url).get_content()
+
+    # Get the links
+    links = get_links(url)
+    print(f"Raw links: {links}")  # Debugging
+
+    # Ensure links is a valid string before parsing
+    if not links or not isinstance(links, str):
+        print("Error: get_links() returned an empty or invalid value")
+        return result  # Exit early to avoid crash
+
+    try:
+        links = json.loads(links)  # Convert JSON string to dictionary
+        print(f"Parsed links (dict): {links}")
+    except json.JSONDecodeError as e:
+        print(f"JSON decoding error: {e}")
+        return result  # Return existing result if parsing fails
+
+    # Ensure "links" key exists and is a list
+    if "links" not in links or not isinstance(links["links"], list):
+        print("Error: Unexpected format in links data")
+        return result
+
+    # Loop through each link and fetch content
+    for link in links["links"]:
+        result += f"\n\n{link['type']}\n"
+        result += Website(link["url"]).get_content()  # Fix incorrect method call
+
+    return result  # Ensure we return the full result at the end
+
+# Call function
+final_result = get_all_details("https://anthropic.com")
+print(f"final_result:\n{final_result}")
+
